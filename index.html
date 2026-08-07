@@ -24,6 +24,8 @@ nav button span { font-size:13px; }
 nav button small { font-size:9px; color:#607c8b; text-transform:uppercase; letter-spacing:.7px; }
 nav button:hover,nav button.nav-active { color:#fff; background:#123247; border-left-color:var(--mint); }
 nav button.nav-active small { color:var(--mint); }
+.manager-link { width:100%; color:#fff; background:#123247; padding:11px 10px; display:flex; align-items:center; justify-content:space-between; text-align:left; border-left:2px solid var(--mint); margin-bottom:3px; text-decoration:none; }
+.manager-link span { font-size:13px; }.manager-link small { font-size:9px; color:var(--mint); text-transform:uppercase; letter-spacing:.7px; }.manager-link:hover { background:#19445b; }
 .pilot-card { border-top:1px solid #234052; margin-top:auto; padding:20px 8px 16px; position:relative; }
 .pilot-card p { margin:0 0 6px 16px; font-size:12px; line-height:1.5; }
 .pilot-card small { margin-left:16px; color:#72909f; font-size:10px; }
@@ -87,6 +89,7 @@ h1,h2,h3,p { margin-top:0; }
     <nav aria-label="Navegação principal">
       <p class="nav-eyebrow">Workspace</p>
       <button class="nav-active" data-view="visao"><span>Visão geral</span><small>Operação</small></button>
+      <a class="manager-link" href="https://cooperado-360-sinal.goheadmkt360.chatgpt.site/" target="_blank" rel="noopener"><span>Visão gerencial Sinal</span><small>Área protegida</small></a>
       <button data-view="insumos"><span>Central de insumos</span><small>Arquivos</small></button>
       <button data-view="acoes"><span>Ações e reembolsos</span><small>Pipeline</small></button>
       <button data-view="pendencias"><span>Pendências</span><small>Prioridades</small></button>
