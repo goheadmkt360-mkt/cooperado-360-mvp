@@ -115,12 +115,12 @@ h1,h2,h3,p { margin-top:0; }
     <header class="topbar"><button class="menu-button" id="menu" aria-label="Abrir menu" aria-expanded="false"><span class="menu-icon" aria-hidden="true"><i></i><i></i><i></i></span></button><div class="breadcrumb"><span>Grupo Sinal</span><b>/</b><strong id="crumb">Visão geral</strong></div><div class="top-actions"><div class="operation-live"><span></span>Operação monitorada</div><button class="primary-button open-modal">+ Enviar insumos</button></div></header>
     <div class="content">
       <section class="static-view active" id="visao">
-        <div class="page-heading"><div><span class="eyebrow">Operação em tempo real</span><h1>Nenhum reembolso fica para trás.</h1><p>Visão única das ações do grupo, do recebimento dos insumos até o crédito aprovado.</p></div><button class="secondary-button goto-report">Ver report da semana →</button></div>
+        <div class="page-heading"><div><span class="eyebrow" id="overview-sync">ACUMULADO DESDE JANEIRO DE 2026 · ATUALIZANDO</span><h1>Nenhum reembolso fica para trás.</h1><p>Leitura consolidada das ações encontradas no portal, da verba disponível ao reembolso aprovado.</p></div><button class="secondary-button goto-report">Ver report da semana →</button></div>
         <div class="metrics-grid">
-          <article class="metric-card metric-main"><div><span>Valor sob gestão</span><strong id="managed">R$ 222.250</strong></div><small id="count">4 ações monitoradas</small><em>piloto demonstrativo</em></article>
-          <article class="metric-card"><span>Reembolso aprovado</span><strong id="approved">R$ 71.500</strong><div class="mini-progress"><i style="width:78%"></i></div><small>78% do objetivo semanal</small></article>
-          <article class="metric-card"><span>Valor em risco</span><strong class="risk-value" id="risk">R$ 28.500</strong><small>1 ação exige retorno da loja</small></article>
-          <article class="metric-card"><span>SLA da operação</span><strong>94%</strong><small>Dentro do prazo acordado</small></article>
+          <article class="metric-card metric-main"><div><span>Valor em ações desde janeiro</span><strong id="managed">—</strong></div><small id="count">Localizando ações de 2026</small><em>FIAT Stage</em></article>
+          <article class="metric-card"><span>Reembolso aprovado</span><strong id="approved">—</strong><div class="mini-progress"><i id="approved-progress" style="width:0%"></i></div><small id="approved-note">Percentual sobre a verba registrada</small></article>
+          <article class="metric-card"><span>Valor de ações em risco</span><strong class="risk-value" id="risk">—</strong><small id="risk-note">Ações ainda não concluídas</small></article>
+          <article class="metric-card"><span>Cobertura da verba</span><strong id="coverage">—</strong><small id="coverage-note">Planejado ÷ verba registrada</small></article>
         </div>
         <div class="dashboard-grid">
           <article class="panel pipeline-panel"><div class="panel-head"><div><span class="eyebrow">Esteira operacional</span><h2>Onde está cada reembolso</h2></div><button data-view="acoes" class="view-link">Abrir pipeline →</button></div><div class="pipeline-row"><div class="pipeline-step"><span class="step-circle blue" id="received-count">0</span><div><strong>Recebido</strong><small>Triagem em até 4h</small></div><i></i></div><div class="pipeline-step"><span class="step-circle violet">1</span><div><strong>Em execução</strong><small>Equipe especialista</small></div><i></i></div><div class="pipeline-step"><span class="step-circle amber" id="analysis-count">2</span><div><strong>Em análise</strong><small>Portal da marca</small></div><i></i></div><div class="pipeline-step"><span class="step-circle green" id="approved-count">1</span><div><strong>Aprovado</strong><small>Pronto para crédito</small></div></div></div><div class="action-list" id="overview-list"></div></article>
@@ -160,7 +160,6 @@ const status=s=>`<span class="status status-${s.toLowerCase().normalize('NFD').r
 const row=a=>`<tr><td><strong>${a.title}</strong><small>#${a.code} · ${a.files} anexos</small></td><td><strong>${a.store}</strong><small>${a.brand}</small></td><td>${a.stage}</td><td>${status(a.status)}</td><td>${a.deadline}</td><td><strong>${money(a.amount)}</strong></td></tr>`;
 function render(){
  const managed=actions.reduce((s,a)=>s+a.amount,0),approved=actions.filter(a=>a.status==='Aprovado').reduce((s,a)=>s+a.amount,0),risk=actions.filter(a=>a.status==='Ajuste solicitado').reduce((s,a)=>s+a.amount,0);
- document.querySelector('#managed').textContent=money(managed);document.querySelector('#approved').textContent=money(approved);document.querySelector('#risk').textContent=money(risk);document.querySelector('#count').textContent=`${actions.length} ações monitoradas`;
  document.querySelector('#report-managed').textContent=money(managed);document.querySelector('#report-approved').textContent=money(approved);document.querySelector('#report-risk').textContent=money(risk);document.querySelector('#pending-value').textContent=`${money(risk)} aguardando ação`;
  document.querySelector('#received-count').textContent=actions.filter(a=>a.status==='Recebido').length;document.querySelector('#analysis-count').textContent=actions.filter(a=>a.status==='Em análise').length;document.querySelector('#approved-count').textContent=actions.filter(a=>a.status==='Aprovado').length;
  document.querySelector('#overview-list').innerHTML=actions.slice(0,3).map(a=>`<div class="action-row"><div class="brand-chip">${a.brand.slice(0,2)}</div><div class="action-title"><strong>${a.title}</strong><small>#${a.code} · ${a.store}</small></div><div class="action-stage"><span>${a.stage}</span><small>Responsável: ${a.owner}</small></div>${status(a.status)}<strong class="action-value">${money(a.amount)}</strong></div>`).join('');
@@ -178,6 +177,17 @@ const managerDashboard=document.querySelector('#manager-dashboard');
 const managerMoney=value=>new Intl.NumberFormat('pt-BR',{style:'currency',currency:'BRL',maximumFractionDigits:2}).format(value);
 const managerPct=value=>new Intl.NumberFormat('pt-BR',{style:'percent',maximumFractionDigits:1}).format(value);
 const managerKey=value=>value.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replaceAll(' ','-');
+async function loadAnnualOverview(){
+ try{
+  const response=await fetch(managerApi+'/api/portal-data');if(!response.ok)throw new Error('unavailable');const data=await response.json(),s=data.summary;
+  document.querySelector('#managed').textContent=managerMoney(s.planned);document.querySelector('#count').textContent=`${data.actions.length} ações localizadas desde janeiro`;
+  document.querySelector('#approved').textContent=managerMoney(s.reimbursed);document.querySelector('#approved-note').textContent=`${managerPct(s.reimbursed/s.budget)} da verba registrada`;document.querySelector('#approved-progress').style.width=`${Math.min(100,(s.reimbursed/s.budget)*100)}%`;
+  document.querySelector('#risk').textContent=managerMoney(s.risk);document.querySelector('#risk-note').textContent=`${data.actions.filter(a=>a.status!=='Aprovado').length} ações ainda não concluídas`;
+  document.querySelector('#coverage').textContent=managerPct(s.planned/s.budget);document.querySelector('#coverage-note').textContent=`${managerMoney(s.planned)} de ${managerMoney(s.budget)}`;
+  document.querySelector('#overview-sync').textContent=`DESDE JANEIRO DE 2026 · FIAT STAGE · ATUALIZADO ${data.updatedAt} · CONSULTA A CADA 40 MIN`;
+  document.querySelector('#report-managed').textContent=managerMoney(s.planned);document.querySelector('#report-approved').textContent=managerMoney(s.reimbursed);document.querySelector('#report-risk').textContent=managerMoney(s.risk);
+ }catch{document.querySelector('#overview-sync').textContent='ACUMULADO DESDE JANEIRO DE 2026 · ATUALIZAÇÃO TEMPORARIAMENTE INDISPONÍVEL';}
+}
 async function loadManager(){
  managerDashboard.innerHTML='<article class="panel manager-section"><p>Atualizando indicadores gerenciais…</p></article>';
  try{const response=await fetch(managerApi+'/api/portal-data');if(!response.ok)throw new Error('unavailable');const data=await response.json();renderManager(data);}catch{managerDashboard.innerHTML='<article class="panel manager-section"><header><div><span>DASHBOARD GERENCIAL</span><h2>Indicadores temporariamente indisponíveis</h2></div></header><p>Tente novamente em alguns instantes.</p></article>';}
@@ -193,6 +203,8 @@ function renderManager(data){
 const backdrop=document.querySelector('#backdrop');document.querySelectorAll('.open-modal').forEach(b=>b.addEventListener('click',()=>backdrop.hidden=false));['close','cancel'].forEach(id=>document.querySelector('#'+id).addEventListener('click',()=>backdrop.hidden=true));backdrop.addEventListener('click',e=>{if(e.target===backdrop)backdrop.hidden=true});
 document.querySelector('#request-form').addEventListener('submit',e=>{e.preventDefault();const f=new FormData(e.target),fileInput=e.target.elements.files,date=String(f.get('deadline')).split('-').reverse().join('/');actions.unshift({id:crypto.randomUUID(),store:f.get('store'),code:'NOVO-'+String(actions.length+1).padStart(2,'0'),brand:f.get('brand'),title:f.get('title'),stage:f.get('stage'),status:'Recebido',amount:Number(f.get('amount')),deadline:date,owner:'A distribuir',files:fileInput.files.length});localStorage.setItem('cooperado360-static-actions',JSON.stringify(actions));render();backdrop.hidden=true;show('insumos');e.target.reset();alert('Solicitação recebida e adicionada à fila de triagem.');});
 render();
+loadAnnualOverview();
+setInterval(()=>{loadAnnualOverview();if(document.querySelector('#gerencial').classList.contains('active'))loadManager();},40*60*1000);
 </script>
 </body>
 </html>
