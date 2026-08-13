@@ -82,7 +82,7 @@
     </section>
 
     <nav class="filters" aria-label="Filtro rápido por status">
-      <button class="filter active" data-filter="Todos">Todos os status</button><button class="filter" data-filter="Realizado">Realizados</button><button class="filter" data-filter="Aprovado">Aprovados</button><button class="filter" data-filter="Em andamento">Em andamento</button><button class="filter" data-filter="Cancelado">Cancelados</button>
+      <button class="filter active" data-filter="Realizado">Realizados</button><button class="filter" data-filter="Aprovado">Aprovados</button><button class="filter" data-filter="Em andamento">Em andamento</button><button class="filter" data-filter="Cancelado">Cancelados</button><button class="filter" data-filter="Todos">Todos os status</button>
     </nav>
 
     <section class="kpis" aria-label="Indicadores principais">
@@ -115,7 +115,7 @@
 
     <div class="section-head"><h2>Detalhamento dos pedidos</h2><p>Pesquise por marca, produto ou código e combine com os filtros de status e marca.</p></div>
     <section class="card table-card">
-      <div class="table-tools"><input id="search" type="search" placeholder="Buscar marca, produto ou código…" aria-label="Buscar pedidos"><select id="statusSelect" aria-label="Filtrar por status"><option>Todos</option><option>Realizado</option><option>Aprovado</option><option>Em andamento</option><option>Cancelado</option></select><select id="brandSelect" aria-label="Filtrar por marca"><option value="Todos">Todas as marcas</option></select></div>
+      <div class="table-tools"><input id="search" type="search" placeholder="Buscar marca, produto ou código…" aria-label="Buscar pedidos"><select id="statusSelect" aria-label="Filtrar por status"><option selected>Realizado</option><option>Aprovado</option><option>Em andamento</option><option>Cancelado</option><option>Todos</option></select><select id="brandSelect" aria-label="Filtrar por marca"><option value="Todos">Todas as marcas</option></select></div>
       <div class="table-wrap"><table><thead><tr><th>Status</th><th>Marca</th><th>Produto</th><th>Código</th><th class="num">Qtd.</th><th class="num">Investimento</th><th class="num">Faturamento</th><th class="num">Lucro</th><th class="num">Margem</th></tr></thead><tbody id="ordersBody"></tbody></table><div class="empty" id="empty" hidden>Nenhum pedido encontrado com os filtros selecionados.</div></div>
     </section>
 
