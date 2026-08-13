@@ -86,10 +86,10 @@
     </nav>
 
     <section class="kpis" aria-label="Indicadores principais">
-      <article class="card kpi"><span class="accent"></span><div class="label">Faturamento ativo</div><div class="value">R$ 106,3 mil</div><div class="note">15 pedidos não cancelados na carteira.</div></article>
-      <article class="card kpi"><span class="accent"></span><div class="label">Lucro estimado ativo</div><div class="value">R$ 44,8 mil</div><div class="note">Após investimento e desconto de 8% registrados.</div></article>
-      <article class="card kpi"><span class="accent"></span><div class="label">Margem sobre faturamento</div><div class="value">42,2%</div><div class="note">Lucro estimado ÷ faturamento ativo.</div></article>
-      <article class="card kpi"><span class="accent"></span><div class="label">Investimento ativo</div><div class="value">R$ 53,0 mil</div><div class="note">Produto, gravação e frete dos pedidos ativos.</div></article>
+      <article class="card kpi"><span class="accent"></span><div class="label" id="revenueLabel">Faturamento — todos os status</div><div class="value" id="revenueValue">—</div><div class="note" id="revenueNote">Calculando a carteira selecionada.</div></article>
+      <article class="card kpi"><span class="accent"></span><div class="label" id="profitLabel">Lucro estimado — todos os status</div><div class="value" id="profitValue">—</div><div class="note" id="profitNote">Após investimento e desconto registrados.</div></article>
+      <article class="card kpi"><span class="accent"></span><div class="label">Margem sobre faturamento</div><div class="value" id="marginValue">—</div><div class="note" id="marginNote">Lucro estimado ÷ faturamento selecionado.</div></article>
+      <article class="card kpi"><span class="accent"></span><div class="label" id="investmentLabel">Investimento — todos os status</div><div class="value" id="investmentValue">—</div><div class="note" id="investmentNote">Produto, gravação e frete da seleção.</div></article>
     </section>
 
     <div class="section-head"><h2>Saúde da carteira</h2><p>Todos os status estão contabilizados; cancelados permanecem visíveis como histórico de oportunidades, não como venda efetiva.</p></div>
@@ -144,10 +144,19 @@
     const pct=new Intl.NumberFormat('pt-BR',{style:'percent',maximumFractionDigits:1});
     const slug=s=>s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/\s+/g,'-');
     const body=document.getElementById('ordersBody'),empty=document.getElementById('empty'),search=document.getElementById('search'),statusSelect=document.getElementById('statusSelect'),brandSelect=document.getElementById('brandSelect');
+    const revenueValue=document.getElementById('revenueValue'),profitValue=document.getElementById('profitValue'),marginValue=document.getElementById('marginValue'),investmentValue=document.getElementById('investmentValue');
     [...new Set(orders.map(o=>o.marca))].sort().forEach(m=>brandSelect.add(new Option(m,m)));
     const bars=document.getElementById('brandBars'),maxBrand=Math.max(...activeBrands.map(x=>x[1]));
     bars.innerHTML=activeBrands.map(([m,v])=>`<div class="bar-row"><b title="${m}">${m}</b><div class="track"><div class="fill" style="width:${v/maxBrand*100}%"></div></div><span class="bar-value">${brl.format(v)}</span></div>`).join('');
-    function render(){const q=search.value.trim().toLowerCase(),st=statusSelect.value,brand=brandSelect.value;const filtered=orders.filter(o=>(st==='Todos'||o.status===st)&&(brand==='Todos'||o.marca===brand)&&(!q||`${o.marca} ${o.produto} ${o.codigo}`.toLowerCase().includes(q)));body.innerHTML=filtered.map(o=>{const margin=o.faturamento?o.lucro/o.faturamento:0;return `<tr><td><span class="badge ${slug(o.status)}">${o.status}</span></td><td><b>${o.marca}</b></td><td>${o.produto}</td><td>${o.codigo||'—'}</td><td class="num">${num.format(o.quantidade)}</td><td class="num">${brl.format(o.investimento)}</td><td class="num">${brl.format(o.faturamento)}</td><td class="num">${brl.format(o.lucro)}</td><td class="num">${pct.format(margin)}</td></tr>`}).join('');empty.hidden=filtered.length>0;document.querySelectorAll('.filter').forEach(b=>b.classList.toggle('active',b.dataset.filter===st));}
+    const statusLabel=st=>st==='Todos'?'todos os status':st.toLowerCase();
+    function renderKpis(filtered,st){
+      const totals=filtered.reduce((acc,o)=>{acc.faturamento+=o.faturamento||0;acc.lucro+=o.lucro||0;acc.investimento+=o.investimento||0;return acc},{faturamento:0,lucro:0,investimento:0});
+      const label=statusLabel(st),count=filtered.length,plural=count===1?'pedido':'pedidos';
+      revenueValue.textContent=brl.format(totals.faturamento);profitValue.textContent=brl.format(totals.lucro);investmentValue.textContent=brl.format(totals.investimento);marginValue.textContent=pct.format(totals.faturamento?totals.lucro/totals.faturamento:0);
+      document.getElementById('revenueLabel').textContent=`Faturamento — ${label}`;document.getElementById('profitLabel').textContent=`Lucro estimado — ${label}`;document.getElementById('investmentLabel').textContent=`Investimento — ${label}`;
+      document.getElementById('revenueNote').textContent=`${count} ${plural} na seleção atual.`;document.getElementById('profitNote').textContent=`Resultado estimado dos ${plural} em ${label}.`;document.getElementById('marginNote').textContent=`Lucro estimado ÷ faturamento de ${label}.`;document.getElementById('investmentNote').textContent=`Produto, gravação e frete de ${label}.`;
+    }
+    function render(){const q=search.value.trim().toLowerCase(),st=statusSelect.value,brand=brandSelect.value;const filtered=orders.filter(o=>(st==='Todos'||o.status===st)&&(brand==='Todos'||o.marca===brand)&&(!q||`${o.marca} ${o.produto} ${o.codigo}`.toLowerCase().includes(q)));renderKpis(filtered,st);body.innerHTML=filtered.map(o=>{const margin=o.faturamento?o.lucro/o.faturamento:0;return `<tr><td><span class="badge ${slug(o.status)}">${o.status}</span></td><td><b>${o.marca}</b></td><td>${o.produto}</td><td>${o.codigo||'—'}</td><td class="num">${num.format(o.quantidade)}</td><td class="num">${brl.format(o.investimento)}</td><td class="num">${brl.format(o.faturamento)}</td><td class="num">${brl.format(o.lucro)}</td><td class="num">${pct.format(margin)}</td></tr>`}).join('');empty.hidden=filtered.length>0;document.querySelectorAll('.filter').forEach(b=>b.classList.toggle('active',b.dataset.filter===st));}
     [search,statusSelect,brandSelect].forEach(el=>el.addEventListener(el===search?'input':'change',render));
     document.querySelectorAll('.filter').forEach(b=>b.addEventListener('click',()=>{statusSelect.value=b.dataset.filter;render();document.querySelector('.table-card').scrollIntoView({behavior:'smooth',block:'start'});}));
     document.querySelectorAll('.status-card').forEach(c=>c.addEventListener('click',()=>{statusSelect.value=c.dataset.status;render();document.querySelector('.table-card').scrollIntoView({behavior:'smooth',block:'start'});}));
